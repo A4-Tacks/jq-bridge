@@ -74,9 +74,6 @@ impl<T, E, I: Iterator<Item = Result<T, E>>> MapResult for I {
     type Err = E;
 }
 
-// TODO 写个jq名称定义, unwrap, 接收input并爆炸报错
-// command 返回id, 然后把id加进管理表
-
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct CommandBuilder {
     args: Option<Vec<String>>,
