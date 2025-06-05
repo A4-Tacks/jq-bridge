@@ -130,7 +130,7 @@ impl CommandBuilder {
         }
 
         let stdin = stdin.as_ref()
-            .map(|path| File::open(path))
+            .map(File::open)
             .transpose()?;
         let stdout = stdout.as_ref()
             .map(|path| OpenOptions::new()
@@ -268,13 +268,13 @@ impl Command {
                 Null
             },
             Command::read_dir(path) => {
-                let paths = fs::read_dir(path)?.into_iter()
+                let paths = fs::read_dir(path)?
                     .map_and(|dir| path_it(dir.path()))
                     .collect::<Result<Vec<Value>, _>>()?;
                 paths.into()
             },
             Command::read_link(link) => {
-                path_it(fs::read_link(link)?)?.into()
+                path_it(fs::read_link(link)?)?
             },
             Command::metadata(path) => {
                 let metadata = fs::metadata(path)?;
@@ -283,7 +283,7 @@ impl Command {
                     "is_file": metadata.is_file(),
                     "id_dir": metadata.is_dir(),
                     "len": metadata.len(),
-                }).into()
+                })
             },
             Command::metadata_extra(path) => {
                 let metadata = fs::metadata(path)?;
@@ -295,7 +295,7 @@ impl Command {
                     "accessed": time_it(metadata.accessed()?),
                     "modified": time_it(metadata.modified()?),
                     "created": time_it(metadata.created()?),
-                }).into()
+                })
             },
             Command::exists(path) => {
                 fs::exists(path)?.into()
@@ -348,17 +348,16 @@ impl Command {
                 buf.into()
             },
             Command::current_dir => {
-                path_it(env::current_dir()?)?.into()
+                path_it(env::current_dir()?)?
             },
             Command::temp_dir => {
-                path_it(env::temp_dir())?.into()
+                path_it(env::temp_dir())?
             },
             Command::get_env(name) => {
                 env::var_os(name)
                     .map(oss_it)
                     .transpose()?
                     .unwrap_or(Value::Null)
-                    .into()
             },
             Command::set_env(name, value) => {
                 unsafe { env::set_var(name, value) }
@@ -385,7 +384,7 @@ impl Command {
                 json!({
                     "stdout": stdout,
                     "status": output.status.code().unwrap_or(NONE_EXIT_CODE),
-                }).into()
+                })
             },
             Command::command(prog, command_builder) => {
                 let command = process::Command::new(prog);
@@ -400,7 +399,7 @@ impl Command {
                     "stdout": stdout,
                     "stderr": stderr,
                     "status": output.status.code().unwrap_or(NONE_EXIT_CODE),
-                }).into()
+                })
             },
             Command::wait_id { id, output } => {
                 if output.is_true() {
@@ -415,7 +414,7 @@ impl Command {
                     })
                 } else {
                     ctx.child(*id)?.wait()?.code().unwrap_or(NONE_EXIT_CODE).into()
-                }.into()
+                }
             },
             Command::kill_id { id } => {
                 ctx.child(*id)?.kill()?;
