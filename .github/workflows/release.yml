@@ -42,7 +42,6 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: jq-bridge
-          features: bin
           archive: $bin_$tag_$target
           tar: none
           tar-xz: unix
